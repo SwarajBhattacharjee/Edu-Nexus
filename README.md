@@ -221,11 +221,6 @@ Edu-Nexus/
 | Vector Eng | Saatvik | Chunking & Vector Store |
 | QA / Ops | Kulvansh | Data Collection |
 
-
-## 🎥 Homepage Tour
-
-![Homepage Tour](docs/screenshots/homepage_tour.webp)
-
 ## License
 
 See [LICENSE](LICENSE).
