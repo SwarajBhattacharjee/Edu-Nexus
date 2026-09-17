@@ -27,9 +27,6 @@
 ### Team PraxisX
 ![Team Section](docs/screenshots/00_homepage_team.png)
 
-### Call to Action & Footer
-![CTA & Footer](docs/screenshots/00_homepage_cta_footer.png)
-
 ---
 
 ## 🔐 Authentication
@@ -40,37 +37,22 @@
 
 ---
 
-## 📊 Dashboard — Light Theme
+## 📊 Dashboard — Light & Dark Themed
 
 ### Source Documents
 ![Sources Light](docs/screenshots/01_sources_light.png)
 
 ### Tri-Hybrid RAG Chat
 ![Chat Light](docs/screenshots/02_chat_light.png)
-
-### Knowledge Graph Explorer
-![Graph Light](docs/screenshots/03_graph_light.png)
-
-### Query History
-![History Light](docs/screenshots/04_history_light.png)
-
-### Settings & Appearance
-![Settings Light](docs/screenshots/05_settings_light.png)
-
----
-
-## 🌙 Dashboard — Dark Theme
-
-### Source Documents
-![Sources Dark](docs/screenshots/01_sources_dark.png)
-
-### Tri-Hybrid RAG Chat
 ![Chat Dark](docs/screenshots/02_chat_dark.png)
 
 ### Knowledge Graph Explorer
 ![Graph Dark](docs/screenshots/03_graph_dark.png)
 
-### Settings
+### Query History
+![History Light](docs/screenshots/04_history_light.png)
+
+### Settings & Appearance
 ![Settings Dark](docs/screenshots/05_settings_dark.png)
 
 ---
