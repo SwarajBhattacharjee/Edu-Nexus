@@ -4,12 +4,6 @@
 
 ---
 
-## 🎥 Homepage Tour
-
-![Homepage Tour](docs/screenshots/homepage_tour.webp)
-
----
-
 ## 🏠 Landing Page
 
 ### Hero Section — Spline 3D Interactive Background
@@ -18,7 +12,7 @@
 ### Tri-Hybrid Intelligence — Three Specialized Retrieval Engines
 ![Tri-Hybrid Intelligence](docs/screenshots/00_homepage_tri_hybrid.png)
 
-### How It Works — Upload → Process → Query → Answer
+### How It Works
 ![How It Works](docs/screenshots/00_homepage_how_it_works.png)
 
 ### Features & Tech Stack
@@ -226,6 +220,11 @@ Edu-Nexus/
 | Data Eng | Swaraj | PDF Cleaning Pipeline |
 | Vector Eng | Saatvik | Chunking & Vector Store |
 | QA / Ops | Kulvansh | Data Collection |
+
+
+## 🎥 Homepage Tour
+
+![Homepage Tour](docs/screenshots/homepage_tour.webp)
 
 ## License
 
