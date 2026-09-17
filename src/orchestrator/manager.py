@@ -44,8 +44,8 @@ logger = logging.getLogger("Orchestrator")
 
 # ── LLM config ────────────────────────────────────────────────────────
 # Ordered fallback lists — if first model is rate-limited, try next
-ROUTER_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3-32b"]
-ANSWER_MODELS = ["moonshotai/kimi-k2-instruct-0905", "qwen/qwen3-32b"]
+ROUTER_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+ANSWER_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
 
 # NVIDIA API fallback (final resort when all Groq models are rate-limited)
 NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"

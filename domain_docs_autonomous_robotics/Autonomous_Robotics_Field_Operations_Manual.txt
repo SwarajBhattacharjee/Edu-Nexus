@@ -1,0 +1,221 @@
+================================================================================
+STANDARD OPERATING PROCEDURE & FIELD RUNBOOK: SOP-ROB-OPS-77
+AUTONOMOUS MOBILE ROBOTICS (AMR) FLEET OPERATIONS & DIAGNOSTIC MANUAL
+PLATFORM REVISION: v4.2 | DISTRIBUTION: CERTIFIED FIELD TECHNICIANS ONLY
+================================================================================
+LAST REVISED: SEPTEMBER 2026
+PRIMARY ESCALATION HOTLINE: +1 (800) 555-AMR-HELP [SITE RELIABILITY ON-CALL]
+DOCUMENT OWNER: INDUSTRIAL OPERATIONS & FIELD RELIABILITY ENGINEERING
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1: DOCUMENT CONTROL, SAFETY BRIEFINGS, AND LOCKOUT/TAGOUT (LOTO)
+--------------------------------------------------------------------------------
+1.1 PURPOSE:
+    This manual specifies direct, step-by-step physical and command-line protocols
+    for commissioning, recalibrating, diagnosing, and safely recovering AMR v4.2
+    units operating within active customer warehouse and assembly environments.
+
+1.2 MANDATORY HIGH-VOLTAGE & KINETIC SAFETY RULES:
+    * DANGER: The AMR chassis houses a 48V / 60Ah LiFePO4 battery pack capable of
+      discharging up to 180A peak current. Short circuits present an instantaneous
+      arc-flash and thermal runaway risk.
+    * ALWAYS disengage the main DC rotary isolator switch (located on the rear
+      lower service hatch) and apply a physical lockout padlock prior to removing
+      chassis top plates or servicing motor drives.
+    * NEVER attempt to bypass the mechanical Emergency Stop (E-Stop) buttons or
+      wire jumpers across the safety relay terminals.
+    * Wear ANSI Z87.1 certified safety glasses, steel-toed ESD footwear, and
+      cut-resistant Level 3 gloves during all mechanical and electrical operations.
+
+--------------------------------------------------------------------------------
+SECTION 2: SITE COMMISSIONING & PRE-FLIGHT HARDWARE INSPECTION
+--------------------------------------------------------------------------------
+Execute this checklist sequentially prior to clearing any new or serviced AMR
+for autonomous mission engagement:
+
+[ ] 2.1 PHYSICAL CHASSIS & FASTENER AUDIT:
+    - Inspect drive-wheel polyurethane treads. Ensure minimum tread depth > 3.5mm.
+    - Verify drive wheel hub bolts (M8 grade 8.8) are torqued to exactly 24.5 Nm.
+    - Check front and rear passive swivel casters for debris, thread entanglement,
+      and ensure free 360-degree rotation.
+    - Verify safety bumper rubber skirt is uncompromised and returns smoothly
+      when physically depressed on left, center, and right quadrants.
+
+[ ] 2.2 OPTICAL & SENSOR APERTURE SANITIZATION:
+    - Clean the primary SICK safety LiDAR optical hood using a lint-free microfiber
+      cloth dampened with 99% pure electronic-grade Isopropyl Alcohol (IPA).
+    - CAUTION: Do NOT use acetone or industrial degreasers on LiDAR domes; solvent
+      will craze the polycarbonate optical surface and cause false scattering.
+    - Inspect the front Intel RealSense RGB-D stereo camera lens protective glass.
+      Ensure zero oil smudges, dust deposition, or surface abrasions.
+
+[ ] 2.3 POWER-ON & ELECTRICAL RAIL VALIDATION:
+    - Rotate rear DC isolation switch clockwise to "ON".
+    - Observe front LED status bar: Must transition from SOLID ORANGE (booting)
+      to PULSING BLUE (self-test) within 28 seconds.
+    - Measure test-point TP1 (24V logic rail) on the motherboard: 24.1V +/- 0.4V.
+    - Measure test-point TP2 (12V sensor rail): 12.05V +/- 0.2V.
+
+--------------------------------------------------------------------------------
+SECTION 3: EDGE TERMINAL DIAGNOSTICS & TELEMETRY TRIAGE CHEATSHEET
+--------------------------------------------------------------------------------
+Field technicians must connect via Ethernet service port (IP: 192.168.10.200/24)
+or service Wi-Fi and execute diagnostics through the local edge terminal:
+
+Command Reference:
+------------------
+1. Check Global System Health & Hardware Daemons:
+   $ amr-health --summary
+   $ systemctl status amr-core.service
+   $ journalctl -u amr-core.service -n 50 --no-pager
+
+2. Verify Sensor Ingestion & Sample Frequency:
+   $ ros2 topic hz /sensors/lidar_front/scan
+     Expected: average rate: 33.32 Hz | min: 0.028s | max: 0.033s | std dev: 0.0012s
+   $ ros2 topic hz /sensors/imu/data_raw
+     Expected: average rate: 1000.1 Hz +/- 2 Hz
+   $ ros2 topic hz /localization/odom_filtered
+     Expected: average rate: 100.0 Hz
+
+3. Verify Edge AI GPU Inference Pipeline:
+   $ nvtop
+     Verify: TensorRT worker process PID is active.
+     Memory usage: ~4.2 GB / 32 GB allocated.
+     GPU Temp: < 72°C (Warning threshold: 82°C; Thermal cut: 90°C).
+
+4. Verify Low-Level CAN Bus Communication Integrity:
+   $ ip -details link show can0
+     Check: State must be "UP". Bitrate: 1000000.
+   $ candump can0 -n 10
+     Verify: Rapid burst of 0x100, 0x180, 0x200, 0x280 messages.
+   $ ip -s -d link show can0 | grep -E "RX|TX|errors"
+     Check: bus-off counter must equal 0, error-warning counter must equal 0.
+
+--------------------------------------------------------------------------------
+SECTION 4: STEP-BY-STEP FIELD SENSOR RECALIBRATION ROUTINES
+--------------------------------------------------------------------------------
+4.1 IMU ZERO-POINT GYROSCOPE BIAS CALIBRATION (Run if robot drifts angularly):
+    Step 1: Park AMR on a verified level granite surface plate or flat concrete.
+    Step 2: Ensure zero floor vibration (disable nearby conveyor belts).
+    Step 3: Put robot into maintenance mode:
+            $ amr-cli mode --set MAINTENANCE
+    Step 4: Execute IMU bias capture routine (takes 60 seconds):
+            $ ros2 run amr_calibration calibrate_imu_bias --samples 60000 --save
+    Step 5: Inspect output:
+            Gyroscope Bias X: < 0.0012 rad/s
+            Gyroscope Bias Y: < 0.0009 rad/s
+            Gyroscope Bias Z: < 0.0008 rad/s
+    Step 6: Restart state estimator:
+            $ systemctl restart amr-localization.service
+
+4.2 WHEEL EFFECTIVE DIAMETER & TRACK WIDTH CALIBRATION:
+    Step 1: Lay a calibrated 10.000-meter laser distance tape on the test track.
+    Step 2: Command the robot to drive exactly 10.000 meters along a straight tape:
+            $ ros2 run amr_calibration drive_linear_distance --meters 10.00
+    Step 3: Measure actual physical distance stopped using laser rangefinder.
+    Step 4: Calculate scale factor: K_linear = D_actual / 10.000.
+    Step 5: If K_linear != 1.0000 (+/- 0.002), update `/etc/amr/kinematics.yaml`:
+            wheel_radius_left: 0.10025 * K_linear
+            wheel_radius_right: 0.10025 * K_linear
+
+--------------------------------------------------------------------------------
+SECTION 5: HEXADECIMAL ERROR & FAULT CODE RESOLUTION MATRIX
+--------------------------------------------------------------------------------
+When the AMR halts and illuminates the service beacon, read the active fault code
+via display panel or terminal command `$ amr-faults --active`.
+
++-----------+-----------------------+------------------------+------------------------------------+
+| Error Hex | Description           | Probable Root Cause    | Prescribed Field Resolution        |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xE01     | LiDAR Ethernet Link   | Loose M12 cable or     | Inspect M12 connector. Re-seat     |
+|           | Packet Timeout        | SICK optical dirty     | Ethernet harness. Clean optical dome|
+|           |                       |                        | with IPA. Check LiDAR 24V fuse.    |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xE02     | State Divergence /    | Wheel slip on oily     | Clear floor spill. Push robot to   |
+|           | EKF Covariance Blowup | floor or heavy feature | known QR benchmark. Re-initialize  |
+|           |                       | starvation in hallway  | pose: $ amr-cli relocalize --auto  |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xE05     | BLDC Motor Overcurrent| Pallet wrap entangled  | LOTO robot. Jack up drive axle.    |
+|           | Drive Inverter Trip   | in drive shaft bearing | Cut away wrapped film or pallet    |
+|           |                       | or excessive payload   | bands. Verify free wheel spin.     |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xE09     | BMS Battery Over-Temp | Operating in ambient   | Abort fast-charging cycle. Relocate|
+|           | Sensor Trip (>55°C)   | >45°C or cooling fan   | robot to air-conditioned bay.      |
+|           |                       | filter clogged         | Vacuum battery bay dust filters.   |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xE14     | Jetson Edge GPU       | Heat sink clogged with | Remove chassis air intake grilles. |
+|           | Thermal Throttling    | cardboard fiber / lint | Clean cooling radiator with canned |
+|           | (>85°C junction)      | or fan bearing seized  | air. Verify fan spins at 4500 RPM. |
++-----------+-----------------------+------------------------+------------------------------------+
+| 0xEE0     | Safety Zone Optical   | Persistent obstacle in | Verify 1.2m perimeter is clear.    |
+|           | Field Breach Lockout  | protective stop field  | Check for reflective high-vis vest |
+|           |                       | or laser optical blind | reflection causing false trips.    |
++-----------+-----------------------+------------------------+------------------------------------+
+
+--------------------------------------------------------------------------------
+SECTION 6: EMERGENCY MANUAL OVERRIDE & DEAD-ROBOT EXTRACTION PLAYBOOK
+--------------------------------------------------------------------------------
+If an AMR suffers complete electrical shutdown or mechanical lockout in a high-
+traffic main forklift aisle, execute this rapid clearance procedure:
+
+6.1 MECHANICAL BRAKE MANUAL RELEASE:
+    1. Turn OFF main DC rotary switch.
+    2. Insert the specialized M5 T-handle brake release tool into the two red
+       apertures on the lower chassis rear panel.
+    3. Rotate both T-handles 90 degrees clockwise until an audible mechanical
+       CLICK confirms the electromagnetic brake springs are compressed.
+    4. The robot can now be pushed by hand.
+
+6.2 TOWING RESTRICTIONS & DANGER WARNING:
+    * CAUTION: Tow velocity MUST NOT EXCEED 0.3 meters/second (walking pace).
+    * EXPLANATION: The permanent magnet synchronous motors act as electrical
+      generators when back-driven. Exceeding 0.5 m/s generates back-EMF voltages
+      exceeding 60V, which will instantly blow the motor controller inverter FETs.
+    * Once safely parked in the maintenance bay, IMMEDIATELY rotate the T-handles
+      90 degrees counter-clockwise to re-engage the mechanical fail-safe brakes.
+
+--------------------------------------------------------------------------------
+SECTION 7: PREVENTATIVE MAINTENANCE SCHEDULE & CADENCE
+--------------------------------------------------------------------------------
+Daily Shift Handover (10 Minutes per unit):
+- Wipe all LiDAR and camera optical lenses with optical cloth and 99% IPA.
+- Visual inspection of polyurethane drive tire perimeter for embedded debris.
+- Battery SOC check: Ensure pack sits above 30% before shift launch.
+
+Weekly Maintenance (45 Minutes per unit):
+- Clean chassis cooling air intake foam filters with industrial vacuum.
+- Execute automated software self-test: `$ amr-test --subsystems all`.
+- Inspect battery cell voltage delta via `$ amr-bms --cells`. Maximum allowable
+  variance between cell 1 and cell 16 is 0.035V. If higher, initiate a 6-hour
+  slow balancing charge cycle.
+
+Monthly Maintenance (2 Hours per unit):
+- Retorque drive wheel bolts, caster swivel mounts, and chassis lift screws.
+- Measure wheel ground contact resistance (ESD grounding path < 1.0 MOhm).
+- Archive local blackbox telemetry files and clear `/var/log/amr/` partition.
+
+--------------------------------------------------------------------------------
+SECTION 8: INCIDENT ESCALATION, LOG CAPTURE, AND TIER-3 DISPATCH
+--------------------------------------------------------------------------------
+If a robot exhibits an unresolved recurring crash (more than 2 stops per shift):
+
+8.1 EXTRACT BLACKBOX MCAP TELEMETRY DUMP:
+    Insert an encrypted FAT32/exFAT USB rescue drive into the service port:
+    $ amr-export-blackbox --last-hours 4 --output /media/usb0/
+    Verify creation of `.mcap` bag file and `syslog.tar.gz`.
+
+8.2 SEVERITY LEVEL CLASSIFICATION & SLA RESPONSE:
+    - Severity 1 (Safety Incident / Injury Risk / Battery Smoke):
+      Action: Push E-Stop, evacuate 5m radius, notify Site Safety Director.
+      SLA Response: Immediate (15 minutes). Hotline: +1 (800) 555-AMR-HELP opt 1.
+    - Severity 2 (Complete Fleet Halted / Navigation Blocked):
+      Action: Export blackbox, ping on-call AMR Site Reliability Engineer.
+      SLA Response: 1 Hour.
+    - Severity 3 (Single AMR Out of Service, fleet operational):
+      Action: Park in maintenance bay, open Tier-2 Jira ticket with blackbox attachment.
+      SLA Response: 4 Hours.
+
+================================================================================
+END OF FIELD OPERATIONS MANUAL — SOP-ROB-OPS-77 (REVISION 3.1)
+================================================================================

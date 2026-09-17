@@ -2,6 +2,79 @@
 
 **Edu Nexus** is a zero-cost university semantic search engine powered by a **Tri-Hybrid RAG** strategy (BM25 + Qdrant + NetworkX). Upload research papers, query across three AI retrieval engines, and build knowledge graphs — all in one unified academic workspace.
 
+---
+
+## 🎥 Homepage Tour
+
+![Homepage Tour](docs/screenshots/homepage_tour.webp)
+
+---
+
+## 🏠 Landing Page
+
+### Hero Section — Spline 3D Interactive Background
+![Homepage Hero](docs/screenshots/00_homepage_hero.png)
+
+### Tri-Hybrid Intelligence — Three Specialized Retrieval Engines
+![Tri-Hybrid Intelligence](docs/screenshots/00_homepage_tri_hybrid.png)
+
+### How It Works — Upload → Process → Query → Answer
+![How It Works](docs/screenshots/00_homepage_how_it_works.png)
+
+### Features & Tech Stack
+![Features & Tech Stack](docs/screenshots/00_homepage_features_techstack.png)
+
+### Team PraxisX
+![Team Section](docs/screenshots/00_homepage_team.png)
+
+### Call to Action & Footer
+![CTA & Footer](docs/screenshots/00_homepage_cta_footer.png)
+
+---
+
+## 🔐 Authentication
+
+| Sign In | Sign Up |
+|---------|---------|
+| ![Sign In](docs/screenshots/00_sign_in.png) | ![Sign Up](docs/screenshots/00_sign_up.png) |
+
+---
+
+## 📊 Dashboard — Light Theme
+
+### Source Documents
+![Sources Light](docs/screenshots/01_sources_light.png)
+
+### Tri-Hybrid RAG Chat
+![Chat Light](docs/screenshots/02_chat_light.png)
+
+### Knowledge Graph Explorer
+![Graph Light](docs/screenshots/03_graph_light.png)
+
+### Query History
+![History Light](docs/screenshots/04_history_light.png)
+
+### Settings & Appearance
+![Settings Light](docs/screenshots/05_settings_light.png)
+
+---
+
+## 🌙 Dashboard — Dark Theme
+
+### Source Documents
+![Sources Dark](docs/screenshots/01_sources_dark.png)
+
+### Tri-Hybrid RAG Chat
+![Chat Dark](docs/screenshots/02_chat_dark.png)
+
+### Knowledge Graph Explorer
+![Graph Dark](docs/screenshots/03_graph_dark.png)
+
+### Settings
+![Settings Dark](docs/screenshots/05_settings_dark.png)
+
+---
+
 ## Architecture
 
 | Brain | Engine | Purpose |
@@ -15,7 +88,7 @@ A Groq-hosted LLM acts as the **intelligent router**, deciding which brain(s) to
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|-----------| 
 | Backend | Python 3, FastAPI (dynamic PORT via env) |
 | Frontend | Vite + React 18 + TypeScript + Tailwind CSS 3 |
 | State | Zustand (auth, workspaces, sidebar, theme) |
@@ -39,6 +112,7 @@ A Groq-hosted LLM acts as the **intelligent router**, deciding which brain(s) to
 - **Query History**: Browse and manage past queries with engine tags
 - **Engine Settings**: Tune retrieval weights per engine
 - **Single-User Auth**: Secure local authentication with bcrypt (rounds=12) + session tokens
+- **Theme Support**: Light, Dark, and System theme modes with 4 accent color options
 - **Docling Integration** (opt-in): Higher quality PDF/PPTX extraction with OCR support
 - **Deployment Ready**: Railway backend + Vercel frontend with IndexedDB browser storage
 

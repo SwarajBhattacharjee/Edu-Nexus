@@ -80,6 +80,7 @@ desktop.ini
 *.log
 *.bak
 skills-lock.json
+.playwright-mcp/
 
 # ── Session Data ──
 sessions/
